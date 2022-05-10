@@ -8,19 +8,20 @@ import ru.yandex.practicum.filmorate.model.User;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @Validated
 @Slf4j
-@RequestMapping("/user")
+@RequestMapping("/users")
 public class UserController {
     @Getter
-    private final Map<Integer, User> map = new HashMap<>();
+    private final List<User> list = new ArrayList<>();
+    private int id;
 
     @PostMapping
-    public void add(@RequestBody @Valid User newUser) {
+    public User add(@RequestBody @Valid User newUser) {
         if (newUser.getName().isEmpty()) {
             log.info("Имя присвоено по названию логина");
             newUser.setName(newUser.getLogin());
@@ -33,19 +34,22 @@ public class UserController {
             log.info("Введен неверный год рождения");
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
-        map.put(newUser.getId(), newUser);
+        newUser.setId(++id);
+        list.add(newUser);
         log.info("Запрос на добавление пользователя выполнен");
+        return newUser;
     }
 
     @PutMapping
-    public void update(@RequestBody User updatedUser) {
-        map.replace(updatedUser.getId(), updatedUser);
+    public User update(@RequestBody User updatedUser) {
+        list.replaceAll(e -> e.getId() == updatedUser.getId() ? updatedUser : e);
         log.info("Запрос на обновление пользователя выполнен");
+        return updatedUser;
     }
 
     @GetMapping
-    public Map<Integer, User> findAll() {
-        return map;
+    public List<User> findAll() {
+        return list;
     }
 }
 

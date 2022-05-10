@@ -9,17 +9,17 @@ import java.time.Duration;
 import java.time.LocalDate;
 
 @Data
-@AllArgsConstructor
 public class Film  {
     private int id;
 
     @NotBlank
-    private String name;
+    final private String name;
 
+    @NotBlank
     @Size(max = 200)
-    private String description;
+    final private String description;
 
-    private LocalDate releaseDate;
-    private Duration duration;
+    final private LocalDate releaseDate;
+    final private Duration duration;
 }
 
