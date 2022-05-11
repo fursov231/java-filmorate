@@ -16,7 +16,6 @@ import java.util.List;
 @Slf4j
 @RequestMapping("/films")
 public class FilmController {
-    @Getter
     private final List<Film> list = new ArrayList<>();
     private int id;
 
@@ -37,7 +36,7 @@ public class FilmController {
     }
 
     @PutMapping
-    public Film update(@RequestBody Film updatedFilm) {
+    public Film update(@RequestBody @Valid Film updatedFilm) {
         list.replaceAll(e -> e.getId() == updatedFilm.getId() ? updatedFilm : e);
         log.info("Запрос на обновление фильма выполнен");
         return updatedFilm;

@@ -16,7 +16,6 @@ import java.util.List;
 @Slf4j
 @RequestMapping("/users")
 public class UserController {
-    @Getter
     private final List<User> list = new ArrayList<>();
     private int id;
 
@@ -41,7 +40,7 @@ public class UserController {
     }
 
     @PutMapping
-    public User update(@RequestBody User updatedUser) {
+    public User update(@RequestBody @Valid User updatedUser) {
         list.replaceAll(e -> e.getId() == updatedUser.getId() ? updatedUser : e);
         log.info("Запрос на обновление пользователя выполнен");
         return updatedUser;
