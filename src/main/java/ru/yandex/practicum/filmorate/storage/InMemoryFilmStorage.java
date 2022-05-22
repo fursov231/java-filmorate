@@ -9,17 +9,20 @@ import java.util.List;
 @Component
 public class InMemoryFilmStorage implements FilmStorage {
     private final List<Film> list = new ArrayList<>();
-    private int id;
 
     @Override
     public void add(Film newFilm) {
-        newFilm.setId(++id);
         list.add(newFilm);
     }
 
     @Override
     public void update(Film updatedFilm) {
         list.replaceAll(e -> e.getId() == updatedFilm.getId() ? updatedFilm : e);
+    }
+
+    @Override
+    public void delete(Film film) {
+        list.remove(film);
     }
 
     @Override

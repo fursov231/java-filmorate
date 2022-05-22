@@ -9,6 +9,8 @@ public interface UserStorage {
 
     void update(User updatedUser);
 
+    void delete(User user);
+
     List<User> findAll();
 
     User findById(long id);
