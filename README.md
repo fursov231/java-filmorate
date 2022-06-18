@@ -1,3 +1,3 @@
 # java-filmorate
 Entity Relationship Diagram for Filmorate project.
-![filmorate](https://user-images.githubusercontent.com/48589615/174451371-20951cd8-3086-40a8-abb3-1ef2ce7d9b3b.jpg)
+![filmorate](https://user-images.githubusercontent.com/48589615/174451217-44e42fd8-6cd8-41c1-8e71-a792119b71bb.jpg)
