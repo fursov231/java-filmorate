@@ -31,8 +31,10 @@ public class User {
     @NonNull
     private LocalDate birthday;
 
-    private Set<Long> friendsIdSet = new HashSet<>();
+    private Boolean friendshipStatus;
 
+    private Set<Long> friendsIdSet = new HashSet<>();
+    
     public void addAsFriend(long id) {
         friendsIdSet.add(id);
     }
@@ -43,6 +45,10 @@ public class User {
 
     public Set<Long> getFriends() {
         return friendsIdSet;
+    }
+
+    public void setFriendshipStatus(Boolean friendshipStatus) {
+        this.friendshipStatus = friendshipStatus;
     }
 }
 

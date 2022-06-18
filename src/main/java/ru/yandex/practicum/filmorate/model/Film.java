@@ -30,6 +30,10 @@ public class Film  {
 
     final private long rate;
 
+    final private String genre;
+
+    final private String mpa;
+
     private Set<Long> likesId = new HashSet<>();
 
     public void like(long id) {
