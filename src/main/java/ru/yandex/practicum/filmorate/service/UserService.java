@@ -6,26 +6,23 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import java.util.Optional;
 
 @Service
 @Slf4j
 public class UserService {
     private final UserStorage userStorage;
-    private int id;
 
     @Autowired
-    public UserService(InMemoryUserStorage userStorage) {
+    public UserService(UserStorage userStorage) {
         this.userStorage = userStorage;
     }
 
-    public User add(User newUser) {
+    public Optional<User> add(User newUser) {
         if (newUser.getName().isEmpty()) {
             log.info("Имя присвоено по названию логина");
             newUser.setName(newUser.getLogin());
@@ -38,14 +35,17 @@ public class UserService {
             log.info("Введен неверный год рождения");
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
-        newUser.setId(++id);
+        if (userStorage.findByEmail(newUser.getEmail()).isPresent()) {
+            log.info("Попытка добавления пользователя с существующим email");
+            throw new ValidationException("Такой email уже существует");
+        }
         userStorage.add(newUser);
         log.info("Запрос на добавление пользователя выполнен");
-        return newUser;
+        return userStorage.findByEmail(newUser.getEmail());
     }
 
     public User update(User updatedUser) {
-        if (userStorage.findById(updatedUser.getId()) == null) {
+        if (userStorage.findById(updatedUser.getId()).isEmpty()) {
             throw new NotFoundException("Передан неверный id");
         }
         userStorage.update(updatedUser);
@@ -54,64 +54,73 @@ public class UserService {
     }
 
     public List<User> findAll() {
+        log.info("Запрос на поиск всех пользователей");
         return userStorage.findAll();
     }
 
-    public User findById(long id) {
-        if (userStorage.findById(id) == null) {
+    public Optional<User> findById(long id) {
+        if (userStorage.findById(id).isEmpty()) {
             throw new NotFoundException("Передан неверный id");
         }
         return userStorage.findById(id);
     }
 
     public void addAsFriend(long id, long friendId) {
-        if (userStorage.findById(id) == null || userStorage.findById(friendId) == null) {
-            throw new NotFoundException("Ошибка в передаче id");
+        if (userStorage.findById(id).isEmpty()) {
+            throw new NotFoundException("Ошибка в передаче userId");
+        } else if (userStorage.findById(friendId).isEmpty()) {
+            throw new NotFoundException("Ошибка в передаче friendId");
         }
-        User user = userStorage.findById(id);
-        user.addAsFriend(friendId);
-        User otherUser = userStorage.findById(friendId);
-        otherUser.addAsFriend(id);
-        userStorage.update(user);
-        userStorage.update(otherUser);
-        log.info("Запрос на добавление в друзья выполнен");
+        if (id == friendId) {
+            throw new ValidationException("Добавление самого себя в друзья невозможно");
+        }
+        userStorage.addAsFriend(id, friendId);
+        log.info("Выполнен запрос на добавление в друзья");
+    }
+
+    public boolean confirmAddingAsFriend(long id, long friendId) {
+        if (userStorage.findById(id).isEmpty()) {
+            throw new NotFoundException("Ошибка в передаче userId");
+        } else if (userStorage.findById(friendId).isEmpty()) {
+            throw new NotFoundException("Ошибка в передаче friendId");
+        }
+        if (userStorage.findFriendRequest(friendId, id)) {
+            userStorage.confirmAddingAsFriend(id, friendId);
+            log.info("Выполнен запрос на подтверждение дружбы");
+            return true;
+        } else {
+            log.info("Запрос на подтверждение дружбы не выполнен");
+            return false;
+        }
+
     }
 
     public void removeFriend(long id, long friendId) {
-        if (userStorage.findById(id) == null || userStorage.findById(friendId) == null) {
-            throw new NotFoundException("Ошибка в передаче id");
+        if (userStorage.findById(id).isEmpty()) {
+            throw new NotFoundException("Ошибка в передаче userId");
+        } else if (userStorage.findById(friendId).isEmpty()) {
+            throw new NotFoundException("Ошибка в передаче friendId");
         }
-        User user = findById(id);
-        User friend = findById(friendId);
-        user.removeFromFriends(friendId);
-        friend.removeFromFriends(id);
-        userStorage.update(user);
-        userStorage.update(friend);
-        log.info("Запрос на удаление из друзей выполнен");
+        if (id == friendId) {
+            throw new ValidationException("Удаление самого себя из друзей невозможно");
+        }
+        userStorage.removeFromFriends(id, friendId);
+        log.info("Выполнен запрос на удаление из друзей");
     }
 
-    public List<User> findUserFriends(long id) {
-        if (userStorage.findById(id) == null) {
-            throw new NotFoundException("Ошибка в передаче id");
+    public List<User> findUsersFriends(long userId) {
+        if (userStorage.findById(userId).isEmpty()) {
+            throw new NotFoundException("Ошибка в передаче userId");
         }
-        List<User> userList = new ArrayList<>();
-        Set<Long> friendsSet = userStorage.findById(id).getFriends();
-        friendsSet.forEach(e -> userList.add(userStorage.findById(e)));
-        return userList;
+        return userStorage.findUsersFriends(userId);
     }
 
-    public List<User> showMutualUserFriends(long id, long otherId) {
-        if (userStorage.findById(id) == null || userStorage.findById(otherId) == null) {
-            throw new NotFoundException("Ошибка в передаче id");
+    public List<User> findCommonUsersFriends(long userId, long friendId) {
+        if (userStorage.findById(userId).isEmpty()) {
+            throw new NotFoundException("Ошибка в передаче userId");
+        } else if (userStorage.findById(friendId).isEmpty()) {
+            throw new NotFoundException("Ошибка в передаче friendId");
         }
-        List<User> userMutualFriends = new ArrayList<>();
-        Set<Long> userFriendsIdSet = userStorage.findById(id).getFriends();
-        Set<Long> otherUserFriendsIdSet = userStorage.findById(otherId).getFriends();
-        for (var uid : userFriendsIdSet) {
-            if (otherUserFriendsIdSet.contains(uid)) {
-                userMutualFriends.add(userStorage.findById(uid));
-            }
-        }
-        return userMutualFriends;
+        return userStorage.findCommonUsersFriends(userId, friendId);
     }
 }

@@ -1,55 +1,39 @@
 package ru.yandex.practicum.filmorate.model;
 
-import lombok.Data;
-import lombok.NonNull;
+import lombok.*;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
-@Data
-public class Film  {
+@Builder
+@Getter
+public class Film {
+    @NonNull
+    @Setter
     private long id;
-
     @NotBlank
     @NonNull
-    final private String name;
+    private String name;
 
     @NotBlank
     @NonNull
     @Size(max = 200)
-    final private String description;
+    private String description;
 
     @NonNull
-    final private LocalDate releaseDate;
+    private LocalDate releaseDate;
 
     @NonNull
-    final private long duration;
+    private long duration;
 
-    final private long rate;
+    private long rate;
 
-    final private String genre;
+    final private Mpa mpa;
 
-    final private String mpa;
-
-    private Set<Long> likesId = new HashSet<>();
-
-    public void like(long id) {
-        likesId.add(id);
-    }
-
-    public void unlike(long id) {
-        likesId.remove(id);
-    }
-
-    public Set<Long> getLikes() {
-        return likesId;
-    }
-
-    public long getLikesCount() {
-        return getLikes().size();
-    }
+    @Singular
+    @Setter
+    private List<Genre> genres;
 }
 

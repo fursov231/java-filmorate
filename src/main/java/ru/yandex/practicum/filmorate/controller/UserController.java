@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @Validated
@@ -21,8 +22,9 @@ public class UserController {
     }
 
     @PostMapping
-    public User add(@RequestBody @Valid User newUser) {
+    public Optional<User> add(@RequestBody @Valid User newUser) {
         return userService.add(newUser);
+       // JsonMapper.getInstance().writeValueAsString(newUser);
     }
 
     @PutMapping
@@ -36,13 +38,21 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public User findById(@PathVariable long id) {
-        return userService.findById(id);
+    public Optional<User> findById(@PathVariable long id) {
+            return userService.findById(id);
     }
 
     @PutMapping("/{id}/friends/{friendId}")
     public void addAsFriend(@PathVariable long id, @PathVariable long friendId) {
         userService.addAsFriend(id, friendId);
+    }
+
+    @PutMapping("/{id}/confirm/{friendId}")
+    public ResponseEntity confirmAddingAsFriend(@PathVariable long id, @PathVariable long friendId) {
+        if (userService.confirmAddingAsFriend(id, friendId)) {
+            return new ResponseEntity("Заявка подтверждена");
+        }
+        return new ResponseEntity("Запрос на подтверждение дружбы не выполнен");
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
@@ -52,13 +62,11 @@ public class UserController {
 
     @GetMapping("/{id}/friends")
     public List<User> findUserFriends(@PathVariable long id) {
-        return userService.findUserFriends(id);
+        return userService.findUsersFriends(id);
     }
 
-    @GetMapping("/{id}/friends/common/{otherId}")
-    public List<User> showMutualUserFriends(@PathVariable long id, @PathVariable long otherId) {
-        return userService.showMutualUserFriends(id, otherId);
+   @GetMapping("/{userId}/friends/common/{friendId}")
+    public List<User> findCommonUsersFriends(@PathVariable long userId, @PathVariable long friendId) {
+        return userService.findCommonUsersFriends(userId, friendId);
     }
 }
-
-
