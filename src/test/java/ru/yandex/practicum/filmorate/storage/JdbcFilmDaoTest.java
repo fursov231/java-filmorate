@@ -18,7 +18,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(properties = {"spring.config.name=myapp-test-h2", "myapp.trx.datasource.url=jdbc:h2:mem:trxServiceStatus"})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
@@ -29,6 +28,8 @@ class JdbcFilmDaoTest {
     private FilmStorage filmStorage;
     @Autowired
     private UserStorage userStorage;
+    @Autowired
+    private LikeStorage likeStorage;
 
     @Test
     public void test1_shouldBeAdded() {
@@ -98,44 +99,7 @@ class JdbcFilmDaoTest {
     }
 
     @Test
-    public void test6_shouldBeLike() {
-        filmStorage.add(getFilm1());
-        userStorage.add(User.builder()
-                .id(1)
-                .email("boris@mail.com")
-                .name("Boris")
-                .login("boris")
-                .birthday(LocalDate.of(1990, 1, 1))
-                .build());
-
-        Optional<User> user = userStorage.findById(1);
-        Optional<Film> film = filmStorage.findById(1);
-
-        boolean isLike = filmStorage.like(film.get().getId(), user.get().getId());
-        assertTrue(isLike);
-    }
-
-    @Test
-    public void test7_shouldBeUnlike() {
-        filmStorage.add(getFilm1());
-        userStorage.add(User.builder()
-                .id(1)
-                .email("boris@mail.com")
-                .name("Boris")
-                .login("boris")
-                .birthday(LocalDate.of(1990, 1, 1))
-                .build());
-
-        Optional<User> user = userStorage.findById(1);
-        Optional<Film> film = filmStorage.findById(1);
-        boolean isLike = filmStorage.like(film.get().getId(), user.get().getId());
-        boolean isUnlike = filmStorage.unlike(film.get().getId(), user.get().getId());
-
-        assertTrue(isUnlike);
-    }
-
-    @Test
-    public void test8_shouldBeFoundPopular() {
+    public void test6_shouldBeFoundPopular() {
         filmStorage.add(getFilm1());
         filmStorage.add(getFilm2());
         userStorage.add(User.builder()
@@ -156,47 +120,11 @@ class JdbcFilmDaoTest {
         Optional<User> user_1 = userStorage.findById(1);
         Optional<User> user_2 = userStorage.findById(2);
         Optional<Film> film_2 = filmStorage.findById(2);
-        filmStorage.like(film_2.get().getId(), user_1.get().getId());
-        filmStorage.like(film_2.get().getId(), user_2.get().getId());
+        likeStorage.like(film_2.get().getId(), user_1.get().getId());
+        likeStorage.like(film_2.get().getId(), user_2.get().getId());
         List<Film> list = filmStorage.findPopulars(10);
 
         assertEquals(list.get(0).getName(), film_2.get().getName());
-    }
-
-    @Test
-    public void test9_shouldBeFoundMpaById() {
-        Mpa mpa = new Mpa(2, "PG");
-
-        Mpa targetMpa = filmStorage.findMpaById(2);
-
-        assertThat(mpa)
-                .isEqualTo(targetMpa);
-    }
-
-    @Test
-    public void test10_shouldBeFoundAllMpa() {
-        List<Mpa> mpas = filmStorage.findAllMpa();
-
-        assertThat(mpas.size())
-                .isEqualTo(5);
-    }
-
-    @Test
-    public void test11_shouldBeFoundGenreById() {
-        Genre genre = new Genre(2, "Драма");
-
-        Genre targetGenre = filmStorage.findGenreById(2);
-
-        assertThat(genre)
-                .isEqualTo(targetGenre);
-    }
-
-    @Test
-    public void test12_shouldBeFoundAllGenres() {
-        List<Genre> genres = filmStorage.findAllGenres();
-
-        assertThat(genres.size())
-                .isEqualTo(6);
     }
 
     private Film getFilm1() {

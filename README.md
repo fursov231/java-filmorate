@@ -4,4 +4,4 @@
 Фильмов много — и с каждым годом становится всё больше. Чем их больше, тем больше разных оценок. Чем больше оценок, тем сложнее сделать выбор.
 
 **Entity Relationship Diagram for Filmorate project:**
-![filmorate](https://user-images.githubusercontent.com/48589615/175814346-a82ce7f5-be6e-4ba4-a534-42b111579370.jpg)
+![filmorate](https://user-images.githubusercontent.com/48589615/175949476-0ced652c-5dc3-4baa-8fb3-cb6659f21dd3.jpg)

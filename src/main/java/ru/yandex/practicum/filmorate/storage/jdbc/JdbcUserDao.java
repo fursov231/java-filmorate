@@ -6,7 +6,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.FriendStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 import ru.yandex.practicum.filmorate.util.UtilMapper;
 
@@ -20,12 +19,10 @@ public class JdbcUserDao implements UserStorage {
     private final Logger log = LoggerFactory.getLogger(JdbcUserDao.class);
     private final JdbcTemplate jdbcTemplate;
     private final UtilMapper utilMapper;
-    private final FriendStorage friendStorage;
 
-    public JdbcUserDao(JdbcTemplate jdbcTemplate, UtilMapper utilMapper, FriendStorage friendStorage) {
+    public JdbcUserDao(JdbcTemplate jdbcTemplate, UtilMapper utilMapper) {
         this.jdbcTemplate = jdbcTemplate;
         this.utilMapper = utilMapper;
-        this.friendStorage = friendStorage;
     }
 
     @Override
@@ -83,7 +80,6 @@ public class JdbcUserDao implements UserStorage {
                     .name(userRows.getString("name"))
                     .birthday(utilMapper.dateFromSql(userRows.getTimestamp("birthday")))
                     .build();
-            user.setFriends(friendStorage.findUsersFriends(id));
             return Optional.of(user);
         } else {
             return Optional.empty();

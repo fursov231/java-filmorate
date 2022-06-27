@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.FriendStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
@@ -16,10 +17,12 @@ import java.util.Optional;
 @Slf4j
 public class UserService {
     private final UserStorage userStorage;
+    private final FriendStorage friendStorage;
 
     @Autowired
-    public UserService(UserStorage userStorage) {
+    public UserService(UserStorage userStorage, FriendStorage friendStorage) {
         this.userStorage = userStorage;
+        this.friendStorage = friendStorage;
     }
 
     public Optional<User> add(User newUser) {
@@ -62,7 +65,9 @@ public class UserService {
         if (userStorage.findById(id).isEmpty()) {
             throw new NotFoundException("Передан неверный id");
         }
-        return userStorage.findById(id);
+        Optional<User> user = userStorage.findById(id);
+        user.ifPresent(value -> value.setFriends(friendStorage.findUsersFriends(id)));
+        return user;
     }
 
     public void addAsFriend(long id, long friendId) {
@@ -74,7 +79,7 @@ public class UserService {
         if (id == friendId) {
             throw new ValidationException("Добавление самого себя в друзья невозможно");
         }
-        userStorage.addAsFriend(id, friendId);
+        friendStorage.addAsFriend(id, friendId);
         log.info("Выполнен запрос на добавление в друзья");
     }
 
@@ -84,8 +89,8 @@ public class UserService {
         } else if (userStorage.findById(friendId).isEmpty()) {
             throw new NotFoundException("Ошибка в передаче friendId");
         }
-        if (userStorage.findFriendRequest(friendId, id)) {
-            userStorage.confirmAddingAsFriend(id, friendId);
+        if (friendStorage.findFriendRequest(friendId, id)) {
+            friendStorage.confirmAddingAsFriend(id, friendId);
             log.info("Выполнен запрос на подтверждение дружбы");
             return true;
         } else {
@@ -104,7 +109,7 @@ public class UserService {
         if (id == friendId) {
             throw new ValidationException("Удаление самого себя из друзей невозможно");
         }
-        userStorage.removeFromFriends(id, friendId);
+        friendStorage.removeFromFriends(id, friendId);
         log.info("Выполнен запрос на удаление из друзей");
     }
 
@@ -112,7 +117,7 @@ public class UserService {
         if (userStorage.findById(userId).isEmpty()) {
             throw new NotFoundException("Ошибка в передаче userId");
         }
-        return userStorage.findUsersFriends(userId);
+        return friendStorage.findUsersFriends(userId);
     }
 
     public List<User> findCommonUsersFriends(long userId, long friendId) {
@@ -121,6 +126,6 @@ public class UserService {
         } else if (userStorage.findById(friendId).isEmpty()) {
             throw new NotFoundException("Ошибка в передаче friendId");
         }
-        return userStorage.findCommonUsersFriends(userId, friendId);
+        return friendStorage.findCommonUsersFriends(userId, friendId);
     }
 }

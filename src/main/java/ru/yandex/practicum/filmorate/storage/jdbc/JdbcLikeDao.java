@@ -18,32 +18,21 @@ public class JdbcLikeDao implements LikeStorage {
     }
 
     @Override
-    public boolean like(long filmId, long userId) {
-        if (isLikeByUser(userId, filmId)) {
-            log.info("Не удалось добавить лайк пользователя № {} фильму {} в БД", userId, filmId);
-            return false;
-        } else {
-            String sql = "INSERT INTO LIKES (FILM_ID, USER_ID) VALUES(?, ?)";
-            jdbcTemplate.update(sql, filmId, userId);
-            log.info("Лайк пользователя № {} фильму {} добавлен в БД", userId, filmId);
-            return true;
-        }
+    public void like(long filmId, long userId) {
+        String sql = "INSERT INTO LIKES (FILM_ID, USER_ID) VALUES(?, ?)";
+        jdbcTemplate.update(sql, filmId, userId);
+        log.info("Лайк пользователя № {} фильму {} добавлен в БД", userId, filmId);
     }
 
     @Override
-    public boolean unlike(long filmId, long userId) {
-        if (isLikeByUser(filmId, userId)) {
-            String sql = "DELETE FROM LIKES WHERE (FILM_ID=? AND USER_ID=?)";
-            jdbcTemplate.update(sql, filmId, userId);
-            log.info("Лайк пользователя № {} фильму {} отменен в БД", userId, filmId);
-            return true;
-        } else {
-            log.info("Не удалось отменить лайк пользователя № {} фильму {} в БД", userId, filmId);
-            return false;
-        }
+    public void unlike(long filmId, long userId) {
+        String sql = "DELETE FROM LIKES WHERE (FILM_ID=? AND USER_ID=?)";
+        jdbcTemplate.update(sql, filmId, userId);
+        log.info("Лайк пользователя № {} фильму {} отменен в БД", userId, filmId);
     }
 
-    private boolean isLikeByUser(long filmId, long userId) {
+    @Override
+    public boolean isLikeByUser(long filmId, long userId) {
         String sql = String.format("SELECT COUNT(USER_ID) AS LIKES " +
                 "FROM LIKES " +
                 "WHERE USER_ID=%d AND FILM_ID=%d " +

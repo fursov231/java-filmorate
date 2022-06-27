@@ -40,21 +40,20 @@ public class JdbcFilmDao implements FilmStorage {
                 newFilm.getRate(),
                 newFilm.getMpa().getId()
         );
-        try {
-            if (!newFilm.getGenres().isEmpty()) {
-                Iterator<Genre> it = newFilm.getGenres().iterator();
-                while (it.hasNext()) {
-                    jdbcTemplate.update("INSERT INTO FILM_GENRES (FILM_ID, GENRE_ID) " +
-                            "VALUES (SELECT FILM_ID " +
-                            "FROM FILMS WHERE NAME=?, ?)", newFilm.getName(), it.next().getId());
-                }
-            }
-        } catch (NullPointerException e) {
-            log.info("У фильма {} не указаны жанры", newFilm.getName());
-        }
-        log.info("Фильм {} добавлен в БД", newFilm.getName());
         newFilm.setId(findIdByName(newFilm.getName()));
-        return newFilm;
+        if (newFilm.getGenres() == null || newFilm.getGenres().isEmpty()) {
+            log.info("Фильм {} добавлен в БД без указания жанров", newFilm.getName());
+            return newFilm;
+        } else {
+            Iterator<Genre> it = newFilm.getGenres().iterator();
+            while (it.hasNext()) {
+                jdbcTemplate.update("INSERT INTO FILM_GENRES (FILM_ID, GENRE_ID) " +
+                        "VALUES (SELECT FILM_ID " +
+                        "FROM FILMS WHERE NAME=?, ?)", newFilm.getName(), it.next().getId());
+            }
+            log.info("Фильм {} добавлен в БД", newFilm.getName());
+            return newFilm;
+        }
     }
 
     @Override
@@ -71,25 +70,24 @@ public class JdbcFilmDao implements FilmStorage {
                 updatedFilm.getMpa().getId(),
                 updatedFilm.getId()
         );
-        try {
-            if (!updatedFilm.getGenres().isEmpty()) {
-                jdbcTemplate.update("DELETE FROM FILM_GENRES WHERE FILM_ID=?", updatedFilm.getId());
-                Set<Genre> genresSet = new LinkedHashSet<>(updatedFilm.getGenres());
-                updatedFilm.setGenres(new ArrayList<>(genresSet));
-                Iterator<Genre> it = genresSet.iterator();
-                while (it.hasNext()) {
-                    jdbcTemplate.update("INSERT INTO FILM_GENRES (FILM_ID, GENRE_ID) " +
-                            "VALUES (SELECT FILM_ID " +
-                            "FROM FILMS WHERE NAME=?, ?)", updatedFilm.getName(), it.next().getId());
-                }
-            } else {
-                jdbcTemplate.update("DELETE FROM FILM_GENRES WHERE FILM_ID=?", updatedFilm.getId());
-            }
-        } catch (NullPointerException e) {
+
+        if (updatedFilm.getGenres() == null || updatedFilm.getGenres().isEmpty()) {
+            jdbcTemplate.update("DELETE FROM FILM_GENRES WHERE FILM_ID=?", updatedFilm.getId());
             log.info("У фильма {} не указаны жанры", updatedFilm.getName());
+            return updatedFilm;
+        } else {
+            jdbcTemplate.update("DELETE FROM FILM_GENRES WHERE FILM_ID=?", updatedFilm.getId());
+            Set<Genre> genresSet = new LinkedHashSet<>(updatedFilm.getGenres());
+            updatedFilm.setGenres(new ArrayList<>(genresSet));
+            Iterator<Genre> it = genresSet.iterator();
+            while (it.hasNext()) {
+                jdbcTemplate.update("INSERT INTO FILM_GENRES (FILM_ID, GENRE_ID) " +
+                        "VALUES (SELECT FILM_ID " +
+                        "FROM FILMS WHERE NAME=?, ?)", updatedFilm.getName(), it.next().getId());
+            }
+            log.info("Данные о фильме № {} обновлены в БД", updatedFilm.getId());
+            return updatedFilm;
         }
-        log.info("Данные о фильме № {} обновлены в БД", updatedFilm.getId());
-        return updatedFilm;
     }
 
     @Override

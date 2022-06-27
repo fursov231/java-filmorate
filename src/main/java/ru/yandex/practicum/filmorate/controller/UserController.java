@@ -26,7 +26,6 @@ public class UserController {
     @PostMapping
     public Optional<User> add(@RequestBody @Valid User newUser) {
         return userService.add(newUser);
-       // JsonMapper.getInstance().writeValueAsString(newUser);
     }
 
     @PutMapping
@@ -41,12 +40,13 @@ public class UserController {
 
     @GetMapping("/{id}")
     public Optional<User> findById(@PathVariable long id) {
-            return userService.findById(id);
+        return userService.findById(id);
     }
 
     @PutMapping("/{id}/friends/{friendId}")
-    public void addAsFriend(@PathVariable long id, @PathVariable long friendId) {
+    public ResponseEntity<String> addAsFriend(@PathVariable long id, @PathVariable long friendId) {
         userService.addAsFriend(id, friendId);
+        return new ResponseEntity<>("Друг добавлен", HttpStatus.OK);
     }
 
     @PutMapping("/{id}/confirm/{friendId}")
@@ -58,8 +58,9 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
-    public void removeFromFriend(@PathVariable long id, @PathVariable long friendId) {
+    public ResponseEntity<String> removeFromFriend(@PathVariable long id, @PathVariable long friendId) {
         userService.removeFriend(id, friendId);
+        return new ResponseEntity<>("Друг удален", HttpStatus.OK);
     }
 
     @GetMapping("/{id}/friends")
@@ -67,7 +68,7 @@ public class UserController {
         return userService.findUsersFriends(id);
     }
 
-   @GetMapping("/{userId}/friends/common/{friendId}")
+    @GetMapping("/{userId}/friends/common/{friendId}")
     public List<User> findCommonUsersFriends(@PathVariable long userId, @PathVariable long friendId) {
         return userService.findCommonUsersFriends(userId, friendId);
     }

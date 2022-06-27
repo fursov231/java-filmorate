@@ -1,9 +1,9 @@
 package ru.yandex.practicum.filmorate.storage;
 
 public interface LikeStorage {
-    boolean like(long filmId, long userId);
+    void like(long filmId, long userId);
 
-    boolean unlike(long filmId, long userId);
+    void unlike(long filmId, long userId);
 
-
+    boolean isLikeByUser(long filmId, long userId);
 }

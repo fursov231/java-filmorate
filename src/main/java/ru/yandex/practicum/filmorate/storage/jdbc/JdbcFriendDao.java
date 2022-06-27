@@ -3,26 +3,25 @@ package ru.yandex.practicum.filmorate.storage.jdbc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FriendStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
 import ru.yandex.practicum.filmorate.util.UtilMapper;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class JdbcFriendDao implements FriendStorage {
     private final Logger log = LoggerFactory.getLogger(JdbcUserDao.class);
     private final JdbcTemplate jdbcTemplate;
     private final UtilMapper utilMapper;
-    private final UserStorage userStorage;
 
-    public JdbcFriendDao(JdbcTemplate jdbcTemplate, UtilMapper utilMapper, UserStorage userStorage) {
+    public JdbcFriendDao(JdbcTemplate jdbcTemplate, UtilMapper utilMapper) {
         this.jdbcTemplate = jdbcTemplate;
         this.utilMapper = utilMapper;
-        this.userStorage = userStorage;
     }
 
     @Override
@@ -67,7 +66,7 @@ public class JdbcFriendDao implements FriendStorage {
                 "FROM friends AS F1 " +
                 "JOIN friends AS F2 ON F1.INCOMING_USER_ID = F2.INCOMING_USER_ID AND F2.OUTGOING_USER_ID=%d " +
                 "WHERE F1.OUTGOING_USER_ID=%d;", userId, friendId);
-        List<User> users = jdbcTemplate.query(sql, (rs, rowNum) -> userStorage.findById(rs.getInt("user_id")).get());
+        List<User> users = jdbcTemplate.query(sql, (rs, rowNum) -> findFriendById(rs.getInt("user_id")).get());
         if (!users.isEmpty()) {
             return users;
         } else {
@@ -91,6 +90,25 @@ public class JdbcFriendDao implements FriendStorage {
             return true;
         } else {
             return false;
+        }
+    }
+
+    private Optional<User> findFriendById(long id) {
+        SqlRowSet userRows = jdbcTemplate.queryForRowSet("SELECT * " +
+                "FROM USERS " +
+                "WHERE USER_ID =?", id);
+        if (userRows.next()) {
+            User user = User.builder()
+                    .id(userRows.getLong("user_id"))
+                    .email(userRows.getString("email"))
+                    .login(userRows.getString("login"))
+                    .name(userRows.getString("name"))
+                    .birthday(utilMapper.dateFromSql(userRows.getTimestamp("birthday")))
+                    .build();
+            user.setFriends(findUsersFriends(id));
+            return Optional.of(user);
+        } else {
+            return Optional.empty();
         }
     }
 }

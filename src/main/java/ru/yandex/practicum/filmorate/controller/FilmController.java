@@ -25,7 +25,7 @@ public class FilmController {
     }
 
     @PostMapping("/films")
-    public Optional<Film> add(@RequestBody @Valid Film newFilm) {
+    public Film add(@RequestBody @Valid Film newFilm) {
         return filmService.add(newFilm);
     }
 
@@ -55,22 +55,14 @@ public class FilmController {
 
     @PutMapping("/films/{filmId}/like/{userId}")
     public ResponseEntity<String> like(@PathVariable long filmId, @PathVariable long userId) {
-        boolean isLike = filmService.like(filmId, userId);
-        if (isLike) {
-            return new ResponseEntity<>("Лайк успешно поставлен", HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>("Неудачная попытка поставить лайк", HttpStatus.BAD_REQUEST);
-        }
+        filmService.like(filmId, userId);
+        return new ResponseEntity<>("Лайк успешно поставлен", HttpStatus.OK);
     }
 
     @DeleteMapping("/films/{filmId}/like/{userId}")
     public ResponseEntity<String> unlike(@PathVariable long filmId, @PathVariable long userId) {
-        boolean isUnlike = filmService.unlike(filmId, userId);
-        if (isUnlike) {
-            return new ResponseEntity<>("Лайк успешно удален", HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>("Неудачная попытка отмены лайка", HttpStatus.BAD_REQUEST);
-        }
+        filmService.unlike(filmId, userId);
+        return new ResponseEntity<>("Лайк успешно удален", HttpStatus.OK);
     }
 
     @GetMapping("/films/popular")
