@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
@@ -48,11 +50,11 @@ public class UserController {
     }
 
     @PutMapping("/{id}/confirm/{friendId}")
-    public ResponseEntity confirmAddingAsFriend(@PathVariable long id, @PathVariable long friendId) {
+    public ResponseEntity<String> confirmAddingAsFriend(@PathVariable long id, @PathVariable long friendId) {
         if (userService.confirmAddingAsFriend(id, friendId)) {
-            return new ResponseEntity("Заявка подтверждена");
+            return new ResponseEntity<>("Заявка подтверждена", HttpStatus.OK);
         }
-        return new ResponseEntity("Запрос на подтверждение дружбы не выполнен");
+        return new ResponseEntity<>("Запрос на подтверждение дружбы не выполнен", HttpStatus.BAD_REQUEST);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")

@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -43,31 +45,31 @@ public class FilmController {
     }
 
     @DeleteMapping("/films/{name}")
-    public ResponseEntity delete(@PathVariable String name) {
+    public ResponseEntity<String> delete(@PathVariable String name) {
         if (filmService.delete(name)) {
-            return new ResponseEntity("Фильм успешно удален");
+            return new ResponseEntity<>("Фильм успешно удален", HttpStatus.OK);
         } else {
-            return new ResponseEntity("Неудачная попытка удаления фильма");
+            return new ResponseEntity<>("Неудачная попытка удаления фильма", HttpStatus.BAD_REQUEST);
         }
     }
 
     @PutMapping("/films/{filmId}/like/{userId}")
-    public ResponseEntity like(@PathVariable long filmId, @PathVariable long userId) {
+    public ResponseEntity<String> like(@PathVariable long filmId, @PathVariable long userId) {
         boolean isLike = filmService.like(filmId, userId);
         if (isLike) {
-            return new ResponseEntity("Лайк успешно поставлен");
+            return new ResponseEntity<>("Лайк успешно поставлен", HttpStatus.OK);
         } else {
-            return new ResponseEntity("Неудачная попытка поставить лайк");
+            return new ResponseEntity<>("Неудачная попытка поставить лайк", HttpStatus.BAD_REQUEST);
         }
     }
 
     @DeleteMapping("/films/{filmId}/like/{userId}")
-    public ResponseEntity unlike(@PathVariable long filmId, @PathVariable long userId) {
+    public ResponseEntity<String> unlike(@PathVariable long filmId, @PathVariable long userId) {
         boolean isUnlike = filmService.unlike(filmId, userId);
         if (isUnlike) {
-            return new ResponseEntity("Лайк успешно удален");
+            return new ResponseEntity<>("Лайк успешно удален", HttpStatus.OK);
         } else {
-            return new ResponseEntity("Неудачная попытка отмены лайка");
+            return new ResponseEntity<>("Неудачная попытка отмены лайка", HttpStatus.BAD_REQUEST);
         }
     }
 

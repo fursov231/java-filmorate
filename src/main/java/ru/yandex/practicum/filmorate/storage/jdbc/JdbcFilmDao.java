@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.GenreStorage;
 import ru.yandex.practicum.filmorate.util.UtilMapper;
 
 import java.sql.Timestamp;
@@ -19,10 +20,12 @@ public class JdbcFilmDao implements FilmStorage {
     private final Logger log = LoggerFactory.getLogger(JdbcUserDao.class);
     private final JdbcTemplate jdbcTemplate;
     private final UtilMapper utilMapper;
+    private final GenreStorage genreStorage;
 
-    public JdbcFilmDao(JdbcTemplate jdbcTemplate, UtilMapper utilMapper) {
+    public JdbcFilmDao(JdbcTemplate jdbcTemplate, UtilMapper utilMapper, GenreStorage genreStorage) {
         this.jdbcTemplate = jdbcTemplate;
         this.utilMapper = utilMapper;
+        this.genreStorage = genreStorage;
     }
 
     @Override
@@ -140,37 +143,11 @@ public class JdbcFilmDao implements FilmStorage {
                     .duration(utilMapper.longFromString(filmRows.getString("duration")))
                     .mpa(new Mpa(filmRows.getInt("MPA_ID"), filmRows.getString("MPA_NAME")))
                     .build();
-            film.setGenres(findFilmsGenres(id));
+            film.setGenres(genreStorage.findFilmsGenres(id));
             return Optional.of(film);
         } else {
             log.info("Пользователь в БД № {} не найден", id);
             return Optional.empty();
-        }
-    }
-
-    @Override
-    public boolean like(long filmId, long userId) {
-        if (isLikeByUser(userId, filmId)) {
-            log.info("Не удалось добавить лайк пользователя № {} фильму {} в БД", userId, filmId);
-            return false;
-        } else {
-            String sql = "INSERT INTO LIKES (FILM_ID, USER_ID) VALUES(?, ?)";
-            jdbcTemplate.update(sql, filmId, userId);
-            log.info("Лайк пользователя № {} фильму {} добавлен в БД", userId, filmId);
-            return true;
-        }
-    }
-
-    @Override
-    public boolean unlike(long filmId, long userId) {
-        if (isLikeByUser(filmId, userId)) {
-            String sql = "DELETE FROM LIKES WHERE (FILM_ID=? AND USER_ID=?)";
-            jdbcTemplate.update(sql, filmId, userId);
-            log.info("Лайк пользователя № {} фильму {} отменен в БД", userId, filmId);
-            return true;
-        } else {
-            log.info("Не удалось отменить лайк пользователя № {} фильму {} в БД", userId, filmId);
-            return false;
         }
     }
 
@@ -183,34 +160,6 @@ public class JdbcFilmDao implements FilmStorage {
                 "ORDER BY LIKES DESC " +
                 "LIMIT %d", count);
         return jdbcTemplate.query(sql, (rs, rowNum) -> findById(rs.getLong("film_id")).get());
-    }
-
-    @Override
-    public Mpa findMpaById(long id) {
-        String sql = String.format("SELECT MPA_ID, NAME " +
-                "FROM MPA " +
-                "WHERE MPA_ID=%d", id);
-        return jdbcTemplate.query(sql, (rs, rowNum) -> new Mpa(rs.getInt("mpa_id"), rs.getString("name"))).get(0);
-    }
-
-    @Override
-    public List<Mpa> findAllMpa() {
-        String sql = "SELECT * FROM MPA";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> new Mpa(rs.getInt("mpa_id"), rs.getString("name")));
-    }
-
-    @Override
-    public Genre findGenreById(long id) {
-        String sql = String.format("SELECT GENRE_ID, NAME " +
-                "FROM GENRE " +
-                "WHERE GENRE_ID=%d", id);
-        return jdbcTemplate.query(sql, (rs, rowNum) -> new Genre(rs.getInt("genre_id"), rs.getString("name"))).get(0);
-    }
-
-    @Override
-    public List<Genre> findAllGenres() {
-        String sql = "SELECT * FROM GENRE";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> new Genre(rs.getInt("genre_id"), rs.getString("name")));
     }
 
     private long findIdByName(String name) {
@@ -236,36 +185,11 @@ public class JdbcFilmDao implements FilmStorage {
                     .duration(utilMapper.longFromString(filmRows.getString("duration")))
                     .mpa(new Mpa(filmRows.getInt("MPA_ID"), filmRows.getString("MPA_NAME")))
                     .build();
-            film.setGenres(findFilmsGenres(film.getId()));
+            film.setGenres(genreStorage.findFilmsGenres(film.getId()));
             return Optional.of(film);
         } else {
             log.info("Фильм {} не найден в БД", name);
             return Optional.empty();
-        }
-    }
-
-    private boolean isLikeByUser(long filmId, long userId) {
-        String sql = String.format("SELECT COUNT(USER_ID) AS LIKES " +
-                "FROM LIKES " +
-                "WHERE USER_ID=%d AND FILM_ID=%d " +
-                "GROUP BY FILM_ID", userId, filmId);
-        List<Integer> likes = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getInt("LIKES"));
-        return !likes.isEmpty();
-    }
-
-    private List<Genre> findFilmsGenres(long filmId) {
-        String sql = String.format("SELECT FG.GENRE_ID AS GENRE_ID, G.NAME AS NAME " +
-                "FROM FILM_GENRES AS FG " +
-                "LEFT JOIN GENRE AS G ON FG.GENRE_ID = G.GENRE_ID " +
-                "WHERE FG.FILM_ID=%d", filmId);
-        List<Genre> genres = jdbcTemplate.query(sql, (rs, rowNum) -> new Genre(
-                rs.getInt("genre_id"),
-                rs.getString("name")
-        ));
-        if (genres.isEmpty()) {
-            return null;
-        } else {
-            return genres;
         }
     }
 }
