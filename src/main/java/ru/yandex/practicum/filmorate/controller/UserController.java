@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.RecommendationService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
@@ -17,10 +18,12 @@ import java.util.Optional;
 @RequestMapping("/users")
 public class UserController {
     final private UserService userService;
+    final private RecommendationService recommendationService;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, RecommendationService recommendationService) {
         this.userService = userService;
+        this.recommendationService = recommendationService;
     }
 
     @PostMapping
@@ -71,5 +74,10 @@ public class UserController {
     @GetMapping("/{userId}/friends/common/{friendId}")
     public List<User> findCommonUsersFriends(@PathVariable long userId, @PathVariable long friendId) {
         return userService.findCommonUsersFriends(userId, friendId);
+    }
+
+    @GetMapping("/users/{id}/recommendations")
+    ResponseEntity<?> findRecommendationsById(@PathVariable int id) {
+        return ResponseEntity.ok(recommendationService.findRecommendedFilms(id));
     }
 }

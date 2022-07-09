@@ -190,4 +190,20 @@ public class JdbcFilmDao implements FilmStorage {
             return Optional.empty();
         }
     }
+
+    @Override
+    public Map<Integer, Set<Integer>> getUserLikes() {
+        String sql = "SELECT user_id, film_id FROM LIKES";
+
+        Map<Integer, Set<Integer>> likes = new HashMap<>();
+        jdbcTemplate.query(sql, (rs) -> {
+            Integer userId = rs.getInt("user_id");
+            Integer filmId = rs.getInt("film_id");
+            likes.merge(userId, new HashSet<>(Set.of(filmId)), (oldValue, newValue) -> {
+                oldValue.add(filmId);
+                return oldValue;
+            });
+        });
+        return likes;
+    }
 }
